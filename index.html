@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fatura da Família</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17302B;
+    --ink-soft:#3C544E;
+    --paper:#EFEAD9;
+    --paper-hi:#F7F4E9;
+    --line:#CFC7AC;
+    --copper:#A9682E;
+    --copper-hi:#C27F3E;
+    --brick:#7E3B34;
+    --brick-hi:#974A41;
+    --ok:#3E6259;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:48px 20px 90px;
+  }
+  header.top{
+    color:var(--paper-hi);
+    padding:0 4px 36px;
+  }
+  header.top h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:2.1rem;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  header.top p{
+    margin:0;
+    color:#B9C4BE;
+    font-size:0.98rem;
+    line-height:1.5;
+    max-width:52ch;
+  }
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:26px 26px 28px;
+    margin-bottom:18px;
+  }
+  .card h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.15rem;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  .card .hint{
+    font-size:0.86rem;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+    line-height:1.5;
+  }
+  .row-divider{
+    border:none;
+    border-top:1px solid var(--line);
+    margin:20px 0;
+  }
+
+  /* Membros */
+  .members{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--paper-hi);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:6px 8px 6px 14px;
+    font-size:0.92rem;
+  }
+  .chip button{
+    border:none;
+    background:none;
+    color:var(--brick);
+    cursor:pointer;
+    font-size:1rem;
+    line-height:1;
+    padding:4px;
+    border-radius:50%;
+  }
+  .chip button:hover{ background: rgba(126,59,52,0.12); }
+  .add-member{
+    display:flex;
+    gap:8px;
+  }
+  .add-member input{ flex:1; }
+
+  input[type=text], textarea, select{
+    font-family:inherit;
+    font-size:0.94rem;
+    background:var(--paper-hi);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:9px 11px;
+    color:var(--ink);
+  }
+  input[type=text]:focus, textarea:focus, select:focus{
+    outline:2px solid var(--copper-hi);
+    outline-offset:1px;
+  }
+  textarea{
+    width:100%;
+    min-height:120px;
+    resize:vertical;
+    line-height:1.5;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+  }
+  button.primary{
+    background:var(--copper);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    padding:10px 18px;
+    font-size:0.92rem;
+    font-weight:500;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  button.primary:hover{ background:var(--copper-hi); }
+  button.ghost{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:3px;
+    padding:9px 14px;
+    font-size:0.88rem;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  button.ghost:hover{ border-color:var(--copper); color:var(--copper); }
+  .toolbar{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+
+  /* Tabela de lançamentos */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:0.88rem;
+  }
+  thead th{
+    text-align:left;
+    font-weight:500;
+    color:var(--ink-soft);
+    font-size:0.76rem;
+    padding:0 8px 8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  tbody td{
+    padding:7px 8px 7px 0;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  td input[type=text]{
+    width:100%;
+    padding:6px 8px;
+    border:1px solid transparent;
+    background:transparent;
+  }
+  td input[type=text]:hover{ border-color:var(--line); }
+  td input.val{
+    font-family:'IBM Plex Mono', monospace;
+    text-align:right;
+    font-variant-numeric: tabular-nums;
+  }
+  td select{ padding:6px 8px; width:100%; }
+  td.col-del{ width:32px; text-align:center; }
+  td.col-del button{
+    background:none; border:none; color:var(--brick);
+    cursor:pointer; font-size:1rem; padding:4px;
+  }
+  td.col-del button:hover{ color:var(--brick-hi); }
+  .empty-state{
+    color:var(--ink-soft);
+    font-size:0.9rem;
+    padding:18px 0 4px;
+    border-top:1px dashed var(--line);
+    margin-top:6px;
+  }
+
+  /* Resumo */
+  .summary-grid{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .person-card{
+    background:var(--paper-hi);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:16px 18px;
+  }
+  .person-card .head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:2px;
+  }
+  .person-card .name{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.05rem;
+  }
+  .person-card .total{
+    font-family:'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    font-size:1.05rem;
+    color:var(--copper);
+  }
+  .person-card .count{
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    margin-bottom:12px;
+  }
+  .person-card .actions{
+    display:flex;
+    gap:8px;
+  }
+  .msg-preview{
+    margin-top:12px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:12px 14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.8rem;
+    line-height:1.55;
+    white-space:pre-wrap;
+    display:none;
+  }
+  .msg-preview.open{ display:block; }
+
+  .unassigned-note{
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    padding:2px 0 0;
+  }
+
+  /* Meses salvos */
+  .month-controls{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:6px;
+  }
+  .month-controls input[type=text]{ width:220px; }
+  .saved-months{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:14px;
+  }
+  .saved-months button{
+    background:var(--paper-hi);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:6px 12px;
+    font-size:0.82rem;
+    cursor:pointer;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .saved-months button:hover{ border-color:var(--copper); color:var(--copper); }
+
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(12px);
+    background:var(--ink);
+    color:var(--paper-hi);
+    padding:10px 18px;
+    border-radius:4px;
+    font-size:0.85rem;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  @media (max-width:600px){
+    .wrap{ padding:32px 14px 80px; }
+    header.top h1{ font-size:1.7rem; }
+    thead th:nth-child(1), tbody td:nth-child(1){ display:none; } /* esconde data em telas pequenas */
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Fatura da família</h1>
+    <p>Cole o texto da sua fatura, atribua cada compra a quem usou o cartão, e gere a cobrança de cada um pronta para enviar.</p>
+  </header>
+
+  <section class="card">
+    <h2>Quem usa o cartão</h2>
+    <p class="hint">Adicione os familiares para quem você repassa gastos. Você pode editar essa lista a qualquer momento.</p>
+    <div class="members" id="membersList"></div>
+    <div class="add-member">
+      <input type="text" id="newMemberInput" placeholder="Nome do familiar">
+      <button class="primary" id="addMemberBtn">Adicionar</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Colar a fatura</h2>
+    <p class="hint">Cole abaixo o texto da fatura (copiado do PDF, do CSV ou do extrato online). Cada linha reconhecida vira um lançamento editável — não precisa ficar perfeito, dá para ajustar depois.</p>
+    <textarea id="pasteArea" placeholder="12/09  UBER TRIP SAO PAULO&#10;13/09  IFOOD *RESTAURANTE          45,90&#10;15/09/2026;FARMACIA SAO JOAO;89,10"></textarea>
+    <div class="toolbar">
+      <button class="primary" id="parseBtn">Analisar e adicionar</button>
+      <button class="ghost" id="addManualBtn">+ Adicionar linha manual</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Lançamentos deste mês</h2>
+    <div class="month-controls">
+      <label class="hint" style="margin:0;">Mês:</label>
+      <input type="text" id="monthLabel">
+      <button class="ghost" id="saveMonthBtn">Salvar mês</button>
+      <button class="ghost" id="clearBtn">Limpar tudo</button>
+    </div>
+    <table id="txTable">
+      <thead>
+        <tr>
+          <th style="width:70px">Data</th>
+          <th>Descrição</th>
+          <th style="width:100px">Valor</th>
+          <th style="width:150px">Responsável</th>
+          <th class="col-del"></th>
+        </tr>
+      </thead>
+      <tbody id="txBody"></tbody>
+    </table>
+    <p class="empty-state" id="emptyState">Nenhum lançamento ainda. Cole a fatura acima ou adicione uma linha manual.</p>
+
+    <div id="savedMonthsWrap" style="display:none;">
+      <hr class="row-divider">
+      <p class="hint" style="margin-bottom:6px;">Meses salvos:</p>
+      <div class="saved-months" id="savedMonths"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Resumo por pessoa</h2>
+    <p class="hint">O total de cada um, com o texto pronto para copiar e enviar.</p>
+    <div class="summary-grid" id="summaryGrid"></div>
+    <p class="unassigned-note" id="unassignedNote"></p>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+
+  const MONTHS_INDEX_KEY = 'fatura_months_index';
+  const MEMBERS_KEY = 'fatura_members';
+
+  function monthKeyFrom(label){
+    return 'fatura_month_' + label.trim().toLowerCase().replace(/\s+/g,'_');
+  }
+
+  function safeGet(key, fallback){
+    try{
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    }catch(e){ return fallback; }
+  }
+  function safeSet(key, value){
+    try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){ /* ignore */ }
+  }
+
+  function defaultMonthLabel(){
+    const d = new Date();
+    const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    return meses[d.getMonth()] + ' de ' + d.getFullYear();
+  }
+
+  let members = safeGet(MEMBERS_KEY, []);
+  let currentMonthLabel = defaultMonthLabel();
+  let transactions = safeGet(monthKeyFrom(currentMonthLabel), []);
+  let idCounter = 1;
+  transactions.forEach(t => { if(t.id >= idCounter) idCounter = t.id + 1; });
+
+  const membersListEl = document.getElementById('membersList');
+  const newMemberInput = document.getElementById('newMemberInput');
+  const addMemberBtn = document.getElementById('addMemberBtn');
+  const pasteArea = document.getElementById('pasteArea');
+  const parseBtn = document.getElementById('parseBtn');
+  const addManualBtn = document.getElementById('addManualBtn');
+  const txBody = document.getElementById('txBody');
+  const emptyState = document.getElementById('emptyState');
+  const summaryGrid = document.getElementById('summaryGrid');
+  const unassignedNote = document.getElementById('unassignedNote');
+  const monthLabelInput = document.getElementById('monthLabel');
+  const saveMonthBtn = document.getElementById('saveMonthBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const savedMonthsWrap = document.getElementById('savedMonthsWrap');
+  const savedMonthsEl = document.getElementById('savedMonths');
+  const toastEl = document.getElementById('toast');
+
+  monthLabelInput.value = currentMonthLabel;
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(()=>toastEl.classList.remove('show'), 1800);
+  }
+
+  function fmt(v){
+    return v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function parseValue(str){
+    let s = str.replace(/[Rr]\$/,'').trim();
+    s = s.replace(/\./g,'').replace(',', '.');
+    const n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+
+  // ---------- Membros ----------
+  function renderMembers(){
+    membersListEl.innerHTML = '';
+    if(members.length === 0){
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.style.margin = '0';
+      p.textContent = 'Ainda não há ninguém na lista.';
+      membersListEl.appendChild(p);
+    }
+    members.forEach(m => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerHTML = `<span>${escapeHtml(m.name)}</span>`;
+      const btn = document.createElement('button');
+      btn.textContent = '×';
+      btn.title = 'Remover ' + m.name;
+      btn.addEventListener('click', () => {
+        members = members.filter(x => x.id !== m.id);
+        transactions.forEach(t => { if(t.owner === m.id) t.owner = ''; });
+        safeSet(MEMBERS_KEY, members);
+        renderMembers(); renderTable(); renderSummary();
+      });
+      chip.appendChild(btn);
+      membersListEl.appendChild(chip);
+    });
+  }
+
+  addMemberBtn.addEventListener('click', () => {
+    const name = newMemberInput.value.trim();
+    if(!name) return;
+    members.push({ id: 'm' + Date.now() + Math.random().toString(36).slice(2,6), name });
+    safeSet(MEMBERS_KEY, members);
+    newMemberInput.value = '';
+    renderMembers(); renderTable();
+  });
+  newMemberInput.addEventListener('keydown', e => { if(e.key === 'Enter') addMemberBtn.click(); });
+
+  // ---------- Parser ----------
+  function parseStatement(text){
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length);
+    const found = [];
+    lines.forEach(line => {
+      let delim = null;
+      if(line.includes(';')) delim = ';';
+      else if(line.includes('\t')) delim = '\t';
+      else if((line.match(/,/g)||[]).length >= 2 && /\d,\d{2}\s*$/.test(line) === false) delim = ',';
+
+      if(delim){
+        const parts = line.split(delim).map(s => s.trim()).filter(s => s.length);
+        if(parts.length >= 2){
+          let valueIdx = -1, value = null;
+          for(let i = parts.length - 1; i >= 0; i--){
+            const v = parseValue(parts[i]);
+            if(v !== null){ value = v; valueIdx = i; break; }
+          }
+          if(value !== null){
+            let dateIdx = -1, date = '';
+            for(let i = 0; i < parts.length; i++){
+              if(/^\d{2}\/\d{2}(\/\d{2,4})?$/.test(parts[i])){ date = parts[i]; dateIdx = i; break; }
+            }
+            const descParts = parts.filter((p,i) => i !== valueIdx && i !== dateIdx);
+            found.push({ date, description: descParts.join(' ') || '(sem descrição)', value });
+            return;
+          }
+        }
+      }
+
+      const dateMatch = line.match(/^(\d{2}\/\d{2}(?:\/\d{2,4})?)/);
+      const valueMatch = line.match(/(-?\s?R?\$?\s?-?\d{1,3}(?:\.\d{3})*,\d{2})\s*$/);
+      if(valueMatch){
+        const value = parseValue(valueMatch[1]);
+        if(value !== null){
+          let desc = line;
+          if(dateMatch) desc = desc.slice(dateMatch[0].length);
+          desc = desc.slice(0, desc.length - valueMatch[0].length).trim();
+          desc = desc.replace(/^[-–;,\s]+|[-–;,\s]+$/g, '');
+          found.push({ date: dateMatch ? dateMatch[1] : '', description: desc || '(sem descrição)', value: Math.abs(value) });
+        }
+      }
+    });
+    return found;
+  }
+
+  parseBtn.addEventListener('click', () => {
+    const text = pasteArea.value;
+    if(!text.trim()) return;
+    const found = parseStatement(text);
+    if(found.length === 0){
+      showToast('Não consegui reconhecer nenhuma linha — adicione manualmente.');
+      return;
+    }
+    found.forEach(f => {
+      transactions.push({ id: idCounter++, date: f.date, description: f.description, value: f.value, owner: '' });
+    });
+    pasteArea.value = '';
+    renderTable(); renderSummary();
+    showToast(found.length + ' lançamento(s) adicionado(s).');
+  });
+
+  addManualBtn.addEventListener('click', () => {
+    transactions.push({ id: idCounter++, date: '', description: '', value: 0, owner: '' });
+    renderTable(); renderSummary();
+  });
+
+  // ---------- Tabela ----------
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderTable(){
+    txBody.innerHTML = '';
+    emptyState.style.display = transactions.length ? 'none' : 'block';
+
+    transactions.forEach(t => {
+      const tr = document.createElement('tr');
+
+      const tdDate = document.createElement('td');
+      const dateInput = document.createElement('input');
+      dateInput.type = 'text'; dateInput.value = t.date; dateInput.placeholder = 'dd/mm';
+      dateInput.addEventListener('input', () => { t.date = dateInput.value; });
+      tdDate.appendChild(dateInput);
+
+      const tdDesc = document.createElement('td');
+      const descInput = document.createElement('input');
+      descInput.type = 'text'; descInput.value = t.description;
+      descInput.addEventListener('input', () => { t.description = descInput.value; });
+      tdDesc.appendChild(descInput);
+
+      const tdVal = document.createElement('td');
+      const valInput = document.createElement('input');
+      valInput.type = 'text'; valInput.className = 'val';
+      valInput.value = fmt(t.value);
+      valInput.addEventListener('change', () => {
+        const parsed = parseValue(valInput.value) ?? parseFloat(valInput.value.replace(',', '.'));
+        t.value = isNaN(parsed) ? 0 : Math.abs(parsed);
+        valInput.value = fmt(t.value);
+        renderSummary();
+      });
+      tdVal.appendChild(valInput);
+
+      const tdOwner = document.createElement('td');
+      const sel = document.createElement('select');
+      const optNone = document.createElement('option');
+      optNone.value = ''; optNone.textContent = '— não atribuído —';
+      sel.appendChild(optNone);
+      members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id; opt.textContent = m.name;
+        if(t.owner === m.id) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', () => { t.owner = sel.value; renderSummary(); });
+      tdOwner.appendChild(sel);
+
+      const tdDel = document.createElement('td');
+      tdDel.className = 'col-del';
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '×';
+      delBtn.title = 'Remover lançamento';
+      delBtn.addEventListener('click', () => {
+        transactions = transactions.filter(x => x.id !== t.id);
+        renderTable(); renderSummary();
+      });
+      tdDel.appendChild(delBtn);
+
+      tr.append(tdDate, tdDesc, tdVal, tdOwner, tdDel);
+      txBody.appendChild(tr);
+    });
+  }
+
+  // ---------- Resumo ----------
+  function renderSummary(){
+    summaryGrid.innerHTML = '';
+
+    if(members.length === 0){
+      summaryGrid.innerHTML = '<p class="hint" style="margin:0;">Adicione familiares acima para ver o resumo por pessoa.</p>';
+      unassignedNote.textContent = '';
+      return;
+    }
+
+    members.forEach(m => {
+      const txs = transactions.filter(t => t.owner === m.id);
+      const total = txs.reduce((s,t) => s + t.value, 0);
+
+      const card = document.createElement('div');
+      card.className = 'person-card';
+
+      const head = document.createElement('div');
+      head.className = 'head';
+      head.innerHTML = `<span class="name">${escapeHtml(m.name)}</span><span class="total">R$ ${fmt(total)}</span>`;
+
+      const count = document.createElement('div');
+      count.className = 'count';
+      count.textContent = txs.length + (txs.length === 1 ? ' compra' : ' compras');
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'ghost';
+      toggleBtn.textContent = 'Ver mensagem';
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'primary';
+      copyBtn.textContent = 'Copiar mensagem';
+
+      const preview = document.createElement('div');
+      preview.className = 'msg-preview';
+      const message = buildMessage(m, txs, total);
+      preview.textContent = message;
+
+      toggleBtn.addEventListener('click', () => preview.classList.toggle('open'));
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(message).then(() => {
+          showToast('Mensagem de ' + m.name + ' copiada.');
+        }).catch(() => showToast('Não foi possível copiar — selecione o texto manualmente.'));
+      });
+
+      actions.append(toggleBtn, copyBtn);
+      card.append(head, count, actions, preview);
+      summaryGrid.appendChild(card);
+    });
+
+    const unassigned = transactions.filter(t => !t.owner);
+    if(unassigned.length){
+      const total = unassigned.reduce((s,t) => s + t.value, 0);
+      unassignedNote.textContent = `${unassigned.length} lançamento(s) sem responsável, totalizando R$ ${fmt(total)} (ficam com você).`;
+    } else {
+      unassignedNote.textContent = '';
+    }
+  }
+
+  function buildMessage(member, txs, total){
+    const lines = [`Fatura de ${currentMonthLabel} — ${member.name}`, ''];
+    if(txs.length === 0){
+      lines.push('Nenhuma compra registrada neste mês.');
+    } else {
+      txs.forEach(t => {
+        const datePart = t.date ? t.date + '  ' : '';
+        lines.push(`${datePart}${t.description}  R$ ${fmt(t.value)}`);
+      });
+    }
+    lines.push('');
+    lines.push(`Total: R$ ${fmt(total)}`);
+    return lines.join('\n');
+  }
+
+  // ---------- Meses ----------
+  function renderSavedMonths(){
+    const index = safeGet(MONTHS_INDEX_KEY, []);
+    savedMonthsWrap.style.display = index.length ? 'block' : 'none';
+    savedMonthsEl.innerHTML = '';
+    index.forEach(label => {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.addEventListener('click', () => loadMonth(label));
+      savedMonthsEl.appendChild(btn);
+    });
+  }
+
+  function loadMonth(label){
+    currentMonthLabel = label;
+    monthLabelInput.value = label;
+    transactions = safeGet(monthKeyFrom(label), []);
+    idCounter = 1;
+    transactions.forEach(t => { if(t.id >= idCounter) idCounter = t.id + 1; });
+    renderTable(); renderSummary();
+    showToast('Mês "' + label + '" carregado.');
+  }
+
+  saveMonthBtn.addEventListener('click', () => {
+    currentMonthLabel = monthLabelInput.value.trim() || defaultMonthLabel();
+    safeSet(monthKeyFrom(currentMonthLabel), transactions);
+    const index = safeGet(MONTHS_INDEX_KEY, []);
+    if(!index.includes(currentMonthLabel)){
+      index.push(currentMonthLabel);
+      safeSet(MONTHS_INDEX_KEY, index);
+    }
+    renderSavedMonths();
+    renderSummary();
+    showToast('Mês "' + currentMonthLabel + '" salvo.');
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if(!confirm('Remover todos os lançamentos deste mês (na tela)? Isso não apaga meses já salvos.')) return;
+    transactions = [];
+    renderTable(); renderSummary();
+  });
+
+  // ---------- Inicialização ----------
+  renderMembers();
+  renderTable();
+  renderSummary();
+  renderSavedMonths();
+
+})();
+</script>
+</body>
+</html>
